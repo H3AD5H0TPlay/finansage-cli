@@ -1,0 +1,33 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<project xmlns="http://maven.apache.org/POM/4.0.0"
+         xmlns:xsi="http://www.w3.org/2001/XMLSchema-instance"
+         xsi:schemaLocation="http://maven.apache.org/POM/4.0.0 http://maven.apache.org/xsd/maven-4.0.0.xsd">
+    <modelVersion>4.0.0</modelVersion>
+
+    <!-- Project Coordinates: Uniquely identifies the project -->
+    <groupId>com.finansage</groupId>
+    <artifactId>finansage-cli</artifactId>
+    <version>1.0.0-SNAPSHOT</version>
+
+    <!-- Project Properties: Central configuration for the project -->
+    <properties>
+        <!-- Specify the Java version for compiler -->
+        <maven.compiler.source>21</maven.compiler.source>
+        <maven.compiler.target>21</maven.compiler.target>
+
+        <!-- Specify project encoding -->
+        <project.build.sourceEncoding>UTF-8</project.build.sourceEncoding>
+    </properties>
+
+    <!-- Dependencies: External libraries our project will use -->
+    <dependencies>
+        <!-- JUnit 5 for Unit Testing. We add this now to establish a test-driven mindset from the start. -->
+        <dependency>
+            <groupId>org.junit.jupiter</groupId>
+            <artifactId>junit-jupiter-api</artifactId>
+            <version>5.10.2</version>
+            <scope>test</scope> <!-- This dependency is only for the test phase -->
+        </dependency>
+    </dependencies>
+
+</project>
