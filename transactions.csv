@@ -1,5 +1,2 @@
 ID,Date,Description,Amount,Type,Category
-6fdd61bf-9c3c-4a5f-99b3-118bf64c14ca,2021-01-01,test income,1500,INCOME,test
-1d37fac8-f16c-4627-97c3-4604d69dbb3d,2021-01-02,test expense,500,EXPENSE,test
-19706d14-55bd-4f00-b836-70b309b67416,2025-09-16,this is now edited,1,EXPENSE,now edited
-fa7e5a76-7608-48b9-afd8-7a5467c3f6d8,2025-09-16,test,51,INCOME,foo
+ecfc575c-d369-40fb-a523-1a7f1399bfb1,2025-09-16,Groceries,80.00,EXPENSE,Food
