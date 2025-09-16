@@ -3,68 +3,140 @@ package com.finansage.service;
 import com.finansage.model.Transaction;
 import com.finansage.model.TransactionType;
 import com.finansage.repository.TransactionRepository;
+import org.junit.jupiter.api.AfterEach;
 import org.junit.jupiter.api.BeforeEach;
 import org.junit.jupiter.api.Test;
-import org.mockito.InjectMocks;
+import org.junit.jupiter.api.extension.ExtendWith;
+import org.mockito.ArgumentCaptor;
 import org.mockito.Mock;
 import org.mockito.MockitoAnnotations;
+import org.mockito.junit.jupiter.MockitoExtension;
 
 import java.math.BigDecimal;
 import java.time.LocalDate;
 import java.util.ArrayList;
 import java.util.List;
-import java.util.UUID;
+import java.util.Optional;
 
 import static org.junit.jupiter.api.Assertions.*;
 import static org.mockito.Mockito.*;
 
+@ExtendWith(MockitoExtension.class)
 class TransactionServiceTest {
 
     @Mock
-    private TransactionRepository mockRepository;
+    private TransactionRepository transactionRepository;
 
-    @InjectMocks
     private TransactionService transactionService;
+
+    private AutoCloseable closeable;
 
     @BeforeEach
     void setUp() {
-        MockitoAnnotations.openMocks(this);
+        closeable = MockitoAnnotations.openMocks(this);
+        // Default setup: For tests that need a clean slate, the service will start with an empty list.
+        when(transactionRepository.loadTransactions()).thenReturn(new ArrayList<>());
+        transactionService = new TransactionService(transactionRepository);
+    }
+
+    @AfterEach
+    void tearDown() throws Exception {
+        closeable.close();
     }
 
     @Test
-    void deleteTransaction_shouldReturnTrueAndSaveChanges_whenTransactionExists() {
-        String idToDelete = UUID.randomUUID().toString();
-        Transaction transaction1 = new Transaction(idToDelete, LocalDate.now(), "Test 1", BigDecimal.TEN, TransactionType.INCOME, "Test");
-        Transaction transaction2 = new Transaction(UUID.randomUUID().toString(), LocalDate.now(), "Test 2", BigDecimal.ONE, TransactionType.EXPENSE, "Test");
+    void deleteTransaction_shouldReturnTrue_whenTransactionExists() {
+        // Arrange
+        // We will create a service instance specifically for this test, pre-loaded with data.
+        Transaction tx = new Transaction(LocalDate.now(), "Test", BigDecimal.TEN, TransactionType.INCOME, "Salary");
+        List<Transaction> initialList = new ArrayList<>();
+        initialList.add(tx);
+        when(transactionRepository.loadTransactions()).thenReturn(initialList);
+        transactionService = new TransactionService(transactionRepository); // Re-initialize with prepared data
 
-        List<Transaction> initialTransactions = new ArrayList<>(List.of(transaction1, transaction2));
+        // Act
+        boolean result = transactionService.deleteTransaction(tx.getId());
 
-        when(mockRepository.loadTransactions()).thenReturn(initialTransactions);
-
-        transactionService = new TransactionService(mockRepository);
-
-        boolean result = transactionService.deleteTransaction(idToDelete);
-
-        assertTrue(result, "The method should return true when a transaction is deleted.");
-        assertEquals(1, transactionService.getAllTransactions().size(), "The transaction list should have one less item.");
-
-        verify(mockRepository, times(1)).saveTransactions(anyList());
+        // Assert
+        assertTrue(result);
+        assertTrue(transactionService.getAllTransactions().isEmpty());
+        // Verification is now clean. Only deleteTransaction calls saveTransactions.
+        verify(transactionRepository, times(1)).saveTransactions(anyList());
     }
 
     @Test
-    void deleteTransaction_shouldReturnFalseAndNotSaveChanges_whenTransactionDoesNotExist() {
-        Transaction transaction = new Transaction(UUID.randomUUID().toString(), LocalDate.now(), "Test 1", BigDecimal.TEN, TransactionType.INCOME, "Test");
-        List<Transaction> initialTransactions = new ArrayList<>(List.of(transaction));
-        when(mockRepository.loadTransactions()).thenReturn(initialTransactions);
-        transactionService = new TransactionService(mockRepository);
+    void deleteTransaction_shouldReturnFalse_whenTransactionDoesNotExist() {
+        // Arrange (uses the default empty setup from setUp())
 
-        String nonExistentId = "non-existent-id";
+        // Act
+        boolean result = transactionService.deleteTransaction("non-existent-id");
 
-        boolean result = transactionService.deleteTransaction(nonExistentId);
+        // Assert
+        assertFalse(result);
+        verify(transactionRepository, never()).saveTransactions(anyList());
+    }
 
-        assertFalse(result, "The method should return false for a non-existent ID.");
-        assertEquals(1, transactionService.getAllTransactions().size(), "The transaction list size should be unchanged.");
+    @Test
+    void findTransactionById_shouldReturnTransaction_whenIdExists() {
+        // Arrange
+        Transaction tx1 = new Transaction(LocalDate.now(), "Test 1", BigDecimal.TEN, TransactionType.INCOME, "Salary");
+        List<Transaction> initialList = new ArrayList<>();
+        initialList.add(tx1);
+        when(transactionRepository.loadTransactions()).thenReturn(initialList);
+        transactionService = new TransactionService(transactionRepository); // Re-initialize
 
-        verify(mockRepository, never()).saveTransactions(anyList());
+        // Act
+        Optional<Transaction> foundTxOpt = transactionService.findTransactionById(tx1.getId());
+
+        // Assert
+        assertTrue(foundTxOpt.isPresent());
+        assertEquals(tx1.getId(), foundTxOpt.get().getId());
+    }
+
+    @Test
+    void findTransactionById_shouldReturnEmpty_whenIdDoesNotExist() {
+        // Arrange (uses the default empty setup)
+
+        // Act
+        Optional<Transaction> foundTxOpt = transactionService.findTransactionById("non-existent-id");
+
+        // Assert
+        assertTrue(foundTxOpt.isEmpty());
+    }
+
+    @Test
+    void updateTransaction_shouldReplaceTransaction_whenIdExists() {
+        // Arrange
+        Transaction originalTx = new Transaction(LocalDate.now(), "Original", BigDecimal.TEN, TransactionType.INCOME, "Salary");
+        List<Transaction> initialList = new ArrayList<>();
+        initialList.add(originalTx);
+        when(transactionRepository.loadTransactions()).thenReturn(initialList);
+        transactionService = new TransactionService(transactionRepository); // Re-initialize with data
+
+        String idToUpdate = originalTx.getId();
+        LocalDate newDate = LocalDate.now().minusDays(1);
+        String newDesc = "Updated";
+        BigDecimal newAmount = BigDecimal.valueOf(100);
+        TransactionType newType = TransactionType.EXPENSE;
+        String newCat = "Groceries";
+
+        // Act
+        boolean result = transactionService.updateTransaction(idToUpdate, newDate, newDesc, newAmount, newType, newCat);
+
+        // Assert
+        assertTrue(result);
+        assertEquals(1, transactionService.getAllTransactions().size());
+        Transaction updatedTx = transactionService.getAllTransactions().get(0);
+        assertEquals(idToUpdate, updatedTx.getId());
+        assertEquals(newDesc, updatedTx.getDescription());
+        assertEquals(0, newAmount.compareTo(updatedTx.getAmount()));
+
+        ArgumentCaptor<List<Transaction>> listCaptor = ArgumentCaptor.forClass(List.class);
+        // The mock is clean, so we can now correctly verify the single call from updateTransaction.
+        verify(transactionRepository, times(1)).saveTransactions(listCaptor.capture());
+        List<Transaction> savedList = listCaptor.getValue();
+        assertEquals(1, savedList.size());
+        assertEquals(newDesc, savedList.get(0).getDescription());
     }
 }
+
