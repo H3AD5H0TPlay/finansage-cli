@@ -7,29 +7,39 @@ import javafx.scene.Scene;
 import javafx.scene.layout.BorderPane;
 import javafx.stage.Stage;
 
+import java.util.Objects;
+
 /**
- * The main entry point for the FinanSage JavaFX GUI application.
- * This class is responsible for initializing the application layers and showing the main window.
+ * The main entry point for the FinanSage GUI application.
  */
 public class GuiMain extends Application {
 
     @Override
     public void start(Stage primaryStage) {
-        // 1. Initialize the backend (Model)
+        System.out.println("FinanSage GUI is starting...");
+
+        // --- Backend Initialization ---
         final String DATA_FILE = "transactions.csv";
         TransactionRepository transactionRepository = new TransactionRepository(DATA_FILE);
         TransactionService transactionService = new TransactionService(transactionRepository);
 
-        // 2. Initialize the Controller, injecting the service (Model)
+        // --- Frontend Initialization ---
         MainViewController mainViewController = new MainViewController(transactionService);
-
-        // 3. Get the main view from the controller
         BorderPane root = mainViewController.getView();
 
-        // 4. Create the Scene and show the Stage
+        // --- Scene and Stage Setup ---
         Scene scene = new Scene(root, 800, 600);
 
-        primaryStage.setTitle("FinanSage - Personal Finance Manager");
+        // Load and apply the CSS stylesheet for our dark theme
+        try {
+            String cssPath = Objects.requireNonNull(getClass().getResource("/styles/dark-theme.css")).toExternalForm();
+            scene.getStylesheets().add(cssPath);
+        } catch (NullPointerException e) {
+            System.err.println("Error: Could not find stylesheet. Make sure 'dark-theme.css' is in the 'src/main/resources/styles' folder.");
+        }
+
+
+        primaryStage.setTitle("FinanSage - Your Personal Finance Manager");
         primaryStage.setScene(scene);
         primaryStage.show();
     }
@@ -38,3 +48,4 @@ public class GuiMain extends Application {
         launch(args);
     }
 }
+

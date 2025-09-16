@@ -2,102 +2,164 @@ package com.finansage.gui;
 
 import com.finansage.model.FinancialSummary;
 import com.finansage.model.Transaction;
-import com.finansage.model.TransactionType;
 import com.finansage.service.TransactionService;
+import javafx.beans.property.SimpleStringProperty;
 import javafx.collections.FXCollections;
 import javafx.collections.ObservableList;
 import javafx.geometry.Insets;
+import javafx.geometry.Pos;
 import javafx.scene.control.*;
-import javafx.scene.control.cell.PropertyValueFactory;
-import javafx.scene.layout.BorderPane;
-import javafx.scene.layout.HBox;
-import javafx.scene.layout.Priority;
-import javafx.scene.layout.Region;
+import javafx.scene.layout.*;
 
 import java.math.BigDecimal;
-import java.time.LocalDate;
+import java.text.NumberFormat;
+import java.time.format.DateTimeFormatter;
 import java.util.Optional;
 
-/**
- * The Controller for the main application view.
- * It handles the layout and user interactions.
- */
 public class MainViewController {
 
     private final TransactionService transactionService;
     private final TableView<Transaction> transactionTable;
-    private final ObservableList<Transaction> transactionData;
+    private final ObservableList<Transaction> observableTransactions;
 
     public MainViewController(TransactionService transactionService) {
         this.transactionService = transactionService;
-        // FIX: Initialize the data list BEFORE creating the table that uses it.
-        this.transactionData = FXCollections.observableArrayList();
+        this.observableTransactions = FXCollections.observableArrayList(transactionService.getAllTransactions());
         this.transactionTable = createTransactionTable();
     }
 
     public BorderPane getView() {
-        BorderPane layout = new BorderPane();
-        layout.setPadding(new Insets(10));
+        BorderPane mainLayout = new BorderPane();
 
-        // Create the toolbar with action buttons
-        ToolBar toolBar = createToolBar();
-        layout.setTop(toolBar);
+        // Left Sidebar for navigation
+        VBox sidebar = createSidebar();
+        mainLayout.setLeft(sidebar);
 
-        // Set the table in the center
-        layout.setCenter(transactionTable);
-        BorderPane.setMargin(transactionTable, new Insets(10, 0, 0, 0));
+        // Main content area
+        BorderPane contentPane = createContentPane();
+        mainLayout.setCenter(contentPane);
 
-        loadTransactionData();
-
-        return layout;
+        return mainLayout;
     }
 
-    private void loadTransactionData() {
-        transactionData.setAll(transactionService.getAllTransactions());
+    private VBox createSidebar() {
+        VBox sidebar = new VBox(10);
+        sidebar.getStyleClass().add("sidebar");
+        sidebar.setPadding(new Insets(20, 10, 20, 10));
+
+        // Placeholder buttons inspired by the screenshot
+        Button dashboardButton = new Button("Dashboard");
+        Button transactionsButton = new Button("Transactions");
+        Button financeButton = new Button("Finance");
+        Button settingsButton = new Button("Settings");
+
+        // Apply styles
+        dashboardButton.getStyleClass().add("sidebar-button");
+        transactionsButton.getStyleClass().addAll("sidebar-button", "sidebar-button-selected"); // Mark 'Transactions' as selected
+        financeButton.getStyleClass().add("sidebar-button");
+        settingsButton.getStyleClass().add("sidebar-button");
+
+        sidebar.getChildren().addAll(dashboardButton, transactionsButton, financeButton, settingsButton);
+
+        return sidebar;
     }
 
-    private ToolBar createToolBar() {
-        Button addButton = new Button("Add");
-        addButton.setOnAction(e -> handleAddTransaction());
+    private BorderPane createContentPane() {
+        BorderPane contentPane = new BorderPane();
+        contentPane.setPadding(new Insets(20));
 
+        // Top toolbar
+        HBox toolbar = createToolbar();
+        contentPane.setTop(toolbar);
+
+        // Table in the center
+        contentPane.setCenter(transactionTable);
+        BorderPane.setMargin(transactionTable, new Insets(20, 0, 0, 0));
+
+        return contentPane;
+    }
+
+
+    private HBox createToolbar() {
+        // --- Buttons ---
+        Button addButton = new Button("Add Transaction");
         Button editButton = new Button("Edit");
-        editButton.setOnAction(e -> handleEditTransaction());
-
         Button deleteButton = new Button("Delete");
-        deleteButton.setOnAction(e -> handleDeleteTransaction());
+        Button summaryButton = new Button("View Summary");
+        summaryButton.setId("summary-button"); // Primary action button
 
-        Button summaryButton = new Button("Summary");
+        addButton.setOnAction(e -> handleAddTransaction());
+        editButton.setOnAction(e -> handleEditTransaction());
+        deleteButton.setOnAction(e -> handleDeleteTransaction());
         summaryButton.setOnAction(e -> handleShowSummary());
 
-        // A spacer to push buttons to the left and right
+
+        // --- Layout ---
         Region spacer = new Region();
         HBox.setHgrow(spacer, Priority.ALWAYS);
 
-        ToolBar toolBar = new ToolBar(
-                addButton,
-                editButton,
-                deleteButton,
-                spacer,
-                summaryButton
-        );
-        toolBar.setPadding(new Insets(5));
-        return toolBar;
+        HBox toolbar = new HBox(10, addButton, editButton, deleteButton, spacer, summaryButton);
+        toolbar.setAlignment(Pos.CENTER_LEFT);
+
+        return toolbar;
     }
+
+    private TableView<Transaction> createTransactionTable() {
+        TableView<Transaction> table = new TableView<>(observableTransactions);
+        table.setColumnResizePolicy(TableView.CONSTRAINED_RESIZE_POLICY_FLEX_LAST_COLUMN);
+        table.setPlaceholder(new Label("No transactions found. Click 'Add Transaction' to get started."));
+
+        // --- Columns ---
+        TableColumn<Transaction, String> dateCol = new TableColumn<>("Date");
+        dateCol.setCellValueFactory(cellData -> new SimpleStringProperty(cellData.getValue().getDate().format(DateTimeFormatter.ofPattern("yyyy-MM-dd"))));
+        dateCol.setPrefWidth(100);
+        dateCol.setMinWidth(100);
+
+
+        TableColumn<Transaction, String> descCol = new TableColumn<>("Description");
+        descCol.setCellValueFactory(cellData -> new SimpleStringProperty(cellData.getValue().getDescription()));
+        descCol.setPrefWidth(250);
+
+        TableColumn<Transaction, String> amountCol = new TableColumn<>("Amount");
+        amountCol.setCellValueFactory(cellData -> {
+            NumberFormat currencyFormat = NumberFormat.getCurrencyInstance();
+            return new SimpleStringProperty(currencyFormat.format(cellData.getValue().getAmount()));
+        });
+        amountCol.setStyle("-fx-alignment: CENTER-RIGHT;");
+        amountCol.setPrefWidth(120);
+        amountCol.setMinWidth(120);
+
+        TableColumn<Transaction, String> typeCol = new TableColumn<>("Type");
+        typeCol.setCellValueFactory(cellData -> new SimpleStringProperty(cellData.getValue().getType().toString()));
+        typeCol.setPrefWidth(100);
+        typeCol.setMinWidth(100);
+
+        TableColumn<Transaction, String> categoryCol = new TableColumn<>("Category");
+        categoryCol.setCellValueFactory(cellData -> new SimpleStringProperty(cellData.getValue().getCategory()));
+        categoryCol.setPrefWidth(150);
+        categoryCol.setMinWidth(150);
+
+        table.getColumns().setAll(dateCol, descCol, amountCol, typeCol, categoryCol);
+
+        return table;
+    }
+
+    // --- Action Handlers (Unchanged from previous version) ---
 
     private void handleAddTransaction() {
         TransactionDialog dialog = new TransactionDialog();
         Optional<Transaction> result = dialog.showAndWait();
 
-        result.ifPresent(transaction -> {
-            transactionService.addTransaction(transaction);
-            transactionData.add(transaction); // More efficient: directly update the UI list
+        result.ifPresent(newTransaction -> {
+            transactionService.addTransaction(newTransaction);
+            observableTransactions.add(newTransaction);
         });
     }
 
     private void handleEditTransaction() {
         Transaction selectedTransaction = transactionTable.getSelectionModel().getSelectedItem();
         if (selectedTransaction == null) {
-            showAlert(Alert.AlertType.WARNING, "No Selection", "Please select a transaction in the table to edit.");
+            showAlert(Alert.AlertType.WARNING, "No Selection", "Please select a transaction to edit.");
             return;
         }
 
@@ -106,11 +168,12 @@ public class MainViewController {
 
         result.ifPresent(updatedTransaction -> {
             if (transactionService.updateTransaction(updatedTransaction)) {
-                // More efficient: find and replace the item in the UI list
-                int index = transactionData.indexOf(selectedTransaction);
+                int index = observableTransactions.indexOf(selectedTransaction);
                 if (index != -1) {
-                    transactionData.set(index, updatedTransaction);
+                    observableTransactions.set(index, updatedTransaction);
                 }
+            } else {
+                showAlert(Alert.AlertType.ERROR, "Update Failed", "Could not update the transaction.");
             }
         });
     }
@@ -118,79 +181,57 @@ public class MainViewController {
     private void handleDeleteTransaction() {
         Transaction selectedTransaction = transactionTable.getSelectionModel().getSelectedItem();
         if (selectedTransaction == null) {
-            showAlert(Alert.AlertType.WARNING, "No Selection", "Please select a transaction in the table to delete.");
+            showAlert(Alert.AlertType.WARNING, "No Selection", "Please select a transaction to delete.");
             return;
         }
 
-        Alert confirmation = new Alert(Alert.AlertType.CONFIRMATION);
-        confirmation.setTitle("Confirm Deletion");
-        confirmation.setHeaderText("Delete Transaction");
-        confirmation.setContentText("Are you sure you want to delete this transaction?\n" +
-                selectedTransaction.getDescription() + " (" + selectedTransaction.getAmount() + ")");
+        Alert confirmAlert = new Alert(Alert.AlertType.CONFIRMATION);
+        confirmAlert.setTitle("Confirm Deletion");
+        confirmAlert.setHeaderText("Delete Transaction");
+        confirmAlert.setContentText("Are you sure you want to delete this transaction?\n" + selectedTransaction.getDescription());
 
-        Optional<ButtonType> result = confirmation.showAndWait();
+        Optional<ButtonType> result = confirmAlert.showAndWait();
         if (result.isPresent() && result.get() == ButtonType.OK) {
             if (transactionService.deleteTransaction(selectedTransaction.getId())) {
-                transactionData.remove(selectedTransaction); // More efficient: directly remove from the UI list
+                observableTransactions.remove(selectedTransaction);
+            } else {
+                showAlert(Alert.AlertType.ERROR, "Delete Failed", "Could not delete the selected transaction.");
             }
         }
     }
 
     private void handleShowSummary() {
         FinancialSummary summary = transactionService.getFinancialSummary();
-        Alert info = new Alert(Alert.AlertType.INFORMATION);
-        info.setTitle("Financial Summary");
-        info.setHeaderText("Here is your current financial summary:");
-        info.setContentText(
-                "Total Income:  " + summary.totalIncome() + "\n" +
-                        "Total Expenses: " + summary.totalExpenses() + "\n\n" +
-                        "Net Balance:   " + summary.netBalance()
+        Alert summaryAlert = new Alert(Alert.AlertType.INFORMATION);
+        summaryAlert.setTitle("Financial Summary");
+        summaryAlert.setHeaderText("Your Current Financial Overview");
+
+        NumberFormat currencyFormat = NumberFormat.getCurrencyInstance();
+        String content = String.format(
+                "Total Income: \t%s\nTotal Expenses: \t%s\n\nNet Balance: \t%s",
+                currencyFormat.format(summary.totalIncome()),
+                currencyFormat.format(summary.totalExpenses()),
+                currencyFormat.format(summary.netBalance())
         );
-        info.showAndWait();
+
+        summaryAlert.setContentText(content);
+        // Apply the dark theme to the dialog pane
+        DialogPane dialogPane = summaryAlert.getDialogPane();
+        dialogPane.getStylesheets().add(getClass().getResource("/styles/dark-theme.css").toExternalForm());
+        dialogPane.getStyleClass().add("dialog-pane");
+
+        summaryAlert.showAndWait();
     }
 
-
-    private TableView<Transaction> createTransactionTable() {
-        TableView<Transaction> table = new TableView<>();
-        table.setColumnResizePolicy(TableView.CONSTRAINED_RESIZE_POLICY_ALL_COLUMNS);
-
-        // Date Column
-        TableColumn<Transaction, LocalDate> dateCol = new TableColumn<>("Date");
-        dateCol.setCellValueFactory(new PropertyValueFactory<>("date"));
-        dateCol.setMinWidth(100);
-
-        // Description Column
-        TableColumn<Transaction, String> descCol = new TableColumn<>("Description");
-        descCol.setCellValueFactory(new PropertyValueFactory<>("description"));
-        descCol.setMinWidth(250);
-
-        // Amount Column
-        TableColumn<Transaction, BigDecimal> amountCol = new TableColumn<>("Amount");
-        amountCol.setCellValueFactory(new PropertyValueFactory<>("amount"));
-        amountCol.setMinWidth(100);
-        amountCol.setStyle("-fx-alignment: CENTER-RIGHT;");
-
-
-        // Type Column
-        TableColumn<Transaction, TransactionType> typeCol = new TableColumn<>("Type");
-        typeCol.setCellValueFactory(new PropertyValueFactory<>("type"));
-        typeCol.setMinWidth(80);
-
-        // Category Column
-        TableColumn<Transaction, String> categoryCol = new TableColumn<>("Category");
-        categoryCol.setCellValueFactory(new PropertyValueFactory<>("category"));
-        categoryCol.setMinWidth(120);
-
-        table.getColumns().addAll(dateCol, descCol, amountCol, typeCol, categoryCol);
-        table.setItems(transactionData);
-        return table;
-    }
-
-    private void showAlert(Alert.AlertType type, String title, String content) {
-        Alert alert = new Alert(type);
+    private void showAlert(Alert.AlertType alertType, String title, String message) {
+        Alert alert = new Alert(alertType);
         alert.setTitle(title);
         alert.setHeaderText(null);
-        alert.setContentText(content);
+        alert.setContentText(message);
+        // Apply the dark theme to the dialog pane
+        DialogPane dialogPane = alert.getDialogPane();
+        dialogPane.getStylesheets().add(getClass().getResource("/styles/dark-theme.css").toExternalForm());
+        dialogPane.getStyleClass().add("dialog-pane");
         alert.showAndWait();
     }
 }
