@@ -4,7 +4,10 @@ import java.math.BigDecimal;
 import java.time.LocalDate;
 import java.util.UUID;
 
-public class Transaction {
+/**
+ * Represents a single financial transaction. This is an immutable data class.
+ */
+public final class Transaction {
     private final String id;
     private final LocalDate date;
     private final String description;
@@ -13,21 +16,14 @@ public class Transaction {
     private final String category;
 
     /**
-     * Constructor for creating a NEW transaction.
-     * It automatically generates a unique ID.
+     * Constructor for creating a brand new transaction. Generates a unique ID.
      */
     public Transaction(LocalDate date, String description, BigDecimal amount, TransactionType type, String category) {
-        this.id = UUID.randomUUID().toString(); // Auto-generate the ID
-        this.date = date;
-        this.description = description;
-        this.amount = amount;
-        this.type = type;
-        this.category = category;
+        this(UUID.randomUUID().toString(), date, description, amount, type, category);
     }
 
     /**
-     * Constructor for LOADING an existing transaction from a data source.
-     * It uses the provided ID.
+     * Constructor for recreating a transaction from a data source (e.g., a file).
      */
     public Transaction(String id, LocalDate date, String description, BigDecimal amount, TransactionType type, String category) {
         this.id = id;
@@ -38,7 +34,7 @@ public class Transaction {
         this.category = category;
     }
 
-    // --- Getters ---
+    // --- Public Getter Methods ---
 
     public String getId() {
         return id;

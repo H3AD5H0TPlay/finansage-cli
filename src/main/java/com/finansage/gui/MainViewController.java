@@ -12,10 +12,10 @@ import javafx.scene.control.TableView;
 import javafx.scene.control.ToolBar;
 import javafx.scene.control.cell.PropertyValueFactory;
 import javafx.scene.layout.BorderPane;
-import javafx.scene.layout.VBox;
 
 import java.math.BigDecimal;
 import java.time.LocalDate;
+import java.util.Optional;
 
 /**
  * Controller for the main application view. Manages the display and interaction of transactions.
@@ -26,14 +26,13 @@ public class MainViewController {
     private final TableView<Transaction> transactionTable;
     private final ObservableList<Transaction> transactionData;
 
-    // The main view pane managed by this controller
     private final BorderPane view;
 
     public MainViewController(TransactionService transactionService) {
         this.transactionService = transactionService;
         this.transactionData = FXCollections.observableArrayList();
         this.transactionTable = createTransactionTable();
-        this.view = createMainView(); // Create the main view
+        this.view = createMainView();
         loadTransactionData();
     }
 
@@ -41,23 +40,35 @@ public class MainViewController {
         BorderPane mainPane = new BorderPane();
         mainPane.setPadding(new Insets(10));
 
-        // Create the action buttons
         Button addButton = new Button("Add");
         Button editButton = new Button("Edit");
         Button deleteButton = new Button("Delete");
 
-        // Add placeholder actions for now
-        addButton.setOnAction(event -> System.out.println("Add button clicked!"));
+        // Link the "Add" button to our new dialog
+        addButton.setOnAction(event -> handleAddTransaction());
+
+        // Placeholder actions for now
         editButton.setOnAction(event -> System.out.println("Edit button clicked!"));
         deleteButton.setOnAction(event -> System.out.println("Delete button clicked!"));
 
         ToolBar toolBar = new ToolBar(addButton, editButton, deleteButton);
-        toolBar.setPadding(new Insets(0, 0, 10, 0)); // Add some spacing below the toolbar
+        toolBar.setPadding(new Insets(0, 0, 10, 0));
 
         mainPane.setTop(toolBar);
         mainPane.setCenter(transactionTable);
 
         return mainPane;
+    }
+
+    private void handleAddTransaction() {
+        // Use our static method to show the dialog
+        Optional<Transaction> result = TransactionDialog.showAddTransactionDialog();
+
+        // If the user clicked OK and a transaction was created...
+        result.ifPresent(newTransaction -> {
+            transactionService.addTransaction(newTransaction);
+            loadTransactionData(); // Refresh the table to show the new data
+        });
     }
 
     private TableView<Transaction> createTransactionTable() {
@@ -79,12 +90,11 @@ public class MainViewController {
         table.getColumns().addAll(dateCol, descriptionCol, amountCol, typeCol, categoryCol);
         table.setItems(transactionData);
 
-        // Professional Touch: Set relative column widths
-        dateCol.setMaxWidth(1f * Integer.MAX_VALUE * 15); // 15%
-        descriptionCol.setMaxWidth(1f * Integer.MAX_VALUE * 40); // 40%
-        amountCol.setMaxWidth(1f * Integer.MAX_VALUE * 15); // 15%
-        typeCol.setMaxWidth(1f * Integer.MAX_VALUE * 10); // 10%
-        categoryCol.setMaxWidth(1f * Integer.MAX_VALUE * 20); // 20%
+        dateCol.setMaxWidth(1f * Integer.MAX_VALUE * 15);
+        descriptionCol.setMaxWidth(1f * Integer.MAX_VALUE * 40);
+        amountCol.setMaxWidth(1f * Integer.MAX_VALUE * 15);
+        typeCol.setMaxWidth(1f * Integer.MAX_VALUE * 10);
+        categoryCol.setMaxWidth(1f * Integer.MAX_VALUE * 20);
 
         return table;
     }
@@ -94,11 +104,8 @@ public class MainViewController {
         transactionData.addAll(transactionService.getAllTransactions());
     }
 
-    /**
-     * Exposes the main view component so it can be added to the main scene.
-     * @return A BorderPane containing all the main view elements.
-     */
     public BorderPane getView() {
         return view;
     }
 }
+
