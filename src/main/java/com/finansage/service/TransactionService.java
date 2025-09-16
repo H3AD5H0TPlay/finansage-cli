@@ -9,7 +9,7 @@ import java.math.BigDecimal;
 import java.time.LocalDate;
 import java.util.ArrayList;
 import java.util.List;
-import java.util.stream.Collectors;
+import java.util.Optional;
 
 public class TransactionService {
     private final TransactionRepository repository;
@@ -39,13 +39,11 @@ public class TransactionService {
     }
 
     public FinancialSummary getFinancialSummary() {
-        // Calculate total income
-        BigDecimal totalIncome = transactions.stream() // 1. Get a stream of transactions
-                .filter(tx -> tx.getType() == TransactionType.INCOME) // 2. Keep only INCOME transactions
-                .map(Transaction::getAmount) // 3. Get the amount from each one
-                .reduce(BigDecimal.ZERO, BigDecimal::add); // 4. Sum them all up, starting from zero
+        BigDecimal totalIncome = transactions.stream()
+                .filter(tx -> tx.getType() == TransactionType.INCOME)
+                .map(Transaction::getAmount)
+                .reduce(BigDecimal.ZERO, BigDecimal::add);
 
-        // Calculate total expenses using the same stream pipeline
         BigDecimal totalExpenses = transactions.stream()
                 .filter(tx -> tx.getType() == TransactionType.EXPENSE)
                 .map(Transaction::getAmount)
@@ -54,6 +52,44 @@ public class TransactionService {
         BigDecimal netBalance = totalIncome.subtract(totalExpenses);
 
         return new FinancialSummary(totalIncome, totalExpenses, netBalance);
+    }
+
+    /**
+     * Finds a single transaction by its unique ID.
+     * @param id The ID of the transaction to find.
+     * @return An Optional containing the transaction if found, otherwise an empty Optional.
+     */
+    public Optional<Transaction> findTransactionById(String id) {
+        return transactions.stream()
+                .filter(tx -> tx.getId().equals(id))
+                .findFirst();
+    }
+
+    /**
+     * Updates an existing transaction by replacing it with a new one.
+     * @param id The ID of the transaction to update.
+     * @param newDate The new date.
+     * @param newDescription The new description.
+     * @param newAmount The new amount.
+     * @param newType The new type.
+     * @param newCategory The new category.
+     * @return true if the transaction was found and updated, false otherwise.
+     */
+    public boolean updateTransaction(String id, LocalDate newDate, String newDescription, BigDecimal newAmount, TransactionType newType, String newCategory) {
+        Optional<Transaction> transactionToUpdateOpt = findTransactionById(id);
+        if (transactionToUpdateOpt.isPresent()) {
+            Transaction oldTransaction = transactionToUpdateOpt.get();
+            int index = transactions.indexOf(oldTransaction);
+
+            // Create a new transaction with the same ID but new details.
+            Transaction updatedTransaction = new Transaction(id, newDate, newDescription, newAmount, newType, newCategory);
+
+            // Replace the old object with the new one at the same position.
+            transactions.set(index, updatedTransaction);
+            repository.saveTransactions(this.transactions);
+            return true;
+        }
+        return false;
     }
 }
 
