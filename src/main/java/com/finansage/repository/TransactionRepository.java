@@ -5,67 +5,81 @@ import com.finansage.model.TransactionType;
 
 import java.io.BufferedReader;
 import java.io.BufferedWriter;
+import java.io.File;
+import java.io.FileReader;
+import java.io.FileWriter;
 import java.io.IOException;
 import java.math.BigDecimal;
-import java.nio.file.Files;
-import java.nio.file.Path;
-import java.nio.file.Paths;
-import java.nio.file.StandardOpenOption;
 import java.time.LocalDate;
+import java.time.format.DateTimeFormatter;
 import java.util.ArrayList;
 import java.util.List;
 
 public class TransactionRepository {
-
-    private final Path filePath;
+    private final String fileName;
+    private static final DateTimeFormatter DATE_FORMATTER = DateTimeFormatter.ofPattern("yyyy-MM-dd");
 
     public TransactionRepository(String fileName) {
-        this.filePath = Paths.get(fileName);
+        this.fileName = fileName;
     }
 
     public List<Transaction> loadTransactions() {
         List<Transaction> transactions = new ArrayList<>();
-        if (!Files.exists(filePath)) {
-            return transactions;
+        File file = new File(fileName);
+
+        if (!file.exists()) {
+            return transactions; // Return empty list if file doesn't exist yet
         }
 
-        try (BufferedReader reader = Files.newBufferedReader(filePath)) {
+        try (BufferedReader reader = new BufferedReader(new FileReader(file))) {
+            // THE FIX: Read and discard the header line before the loop.
+            String header = reader.readLine();
+            if (header == null) {
+                return transactions; // File is empty or only has a header.
+            }
+
             String line;
             while ((line = reader.readLine()) != null) {
-                String[] parts = line.split(",");
-                if (parts.length == 6) {
-                    String id = parts[0];
-                    LocalDate date = LocalDate.parse(parts[1]);
-                    String description = parts[2];
-                    BigDecimal amount = new BigDecimal(parts[3]);
-                    TransactionType type = TransactionType.valueOf(parts[4]);
-                    String category = parts[5];
-                    transactions.add(new Transaction(id, date, description, amount, type, category));
+                String[] values = line.split(",");
+                if (values.length == 6) {
+                    // Re-create the transaction object using the full constructor
+                    Transaction transaction = new Transaction(
+                            values[0], // ID
+                            LocalDate.parse(values[1], DATE_FORMATTER),
+                            values[2], // Description
+                            new BigDecimal(values[3]),
+                            TransactionType.valueOf(values[4]),
+                            values[5] // Category
+                    );
+                    transactions.add(transaction);
                 }
             }
-        } catch (IOException e) {
-            System.err.println("Error loading transactions from file: " + e.getMessage());
+        } catch (IOException | IllegalArgumentException e) {
+            System.err.println("Error loading transactions: " + e.getMessage());
         }
         return transactions;
     }
 
     public void saveTransactions(List<Transaction> transactions) {
-        try (BufferedWriter writer = Files.newBufferedWriter(filePath, StandardOpenOption.CREATE, StandardOpenOption.TRUNCATE_EXISTING)) {
-            for (Transaction t : transactions) {
-                if (t.getId() == null) {}
+        try (BufferedWriter writer = new BufferedWriter(new FileWriter(fileName))) {
+            writer.write("ID,Date,Description,Amount,Type,Category");
+            writer.newLine();
+
+            for (Transaction tx : transactions) {
                 String line = String.join(",",
-                        t.getId(),
-                        t.getDate().toString(),
-                        t.getDescription(),
-                        t.getAmount().toPlainString(),
-                        t.getType().name(),
-                        t.getCategory()
+                        tx.getId(),
+                        tx.getDate().format(DATE_FORMATTER),
+                        tx.getDescription(),
+                        tx.getAmount().toPlainString(),
+                        tx.getType().name(),
+                        tx.getCategory()
                 );
                 writer.write(line);
                 writer.newLine();
             }
         } catch (IOException e) {
-            System.err.println("Error saving transactions to file: " + e.getMessage());
+            System.err.println("Error saving transactions: " + e.getMessage());
         }
     }
 }
+
