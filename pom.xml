@@ -21,13 +21,42 @@
 
     <!-- Dependencies: External libraries our project will use -->
     <dependencies>
-        <!-- JUnit 5 for Unit Testing. We add this now to establish a test-driven mindset from the start. -->
+        <!-- JUnit 5 for Unit Testing -->
         <dependency>
             <groupId>org.junit.jupiter</groupId>
             <artifactId>junit-jupiter-api</artifactId>
             <version>5.10.2</version>
-            <scope>test</scope> <!-- This dependency is only for the test phase -->
+            <scope>test</scope>
         </dependency>
+
+        <!-- Mockito for creating mock objects in tests -->
+        <dependency>
+            <groupId>org.mockito</groupId>
+            <artifactId>mockito-core</artifactId>
+            <version>5.12.0</version>
+            <scope>test</scope>
+        </dependency>
+        <dependency>
+            <groupId>org.mockito</groupId>
+            <artifactId>mockito-junit-jupiter</artifactId>
+            <version>5.12.0</version>
+            <scope>test</scope>
+        </dependency>
+
+        <dependency>
+            <groupId>net.bytebuddy</groupId>
+            <artifactId>byte-buddy</artifactId>
+            <version>1.14.19</version>
+            <scope>test</scope>
+        </dependency>
+        <dependency>
+            <groupId>net.bytebuddy</groupId>
+            <artifactId>byte-buddy-agent</artifactId>
+            <version>1.14.19</version>
+            <scope>test</scope>
+        </dependency>
+
     </dependencies>
 
 </project>
+
