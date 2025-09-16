@@ -1,26 +1,27 @@
 /*
- * FinanSage Dark Theme - Version 4.0
- * A professional, high-contrast theme inspired by modern UI/UX design.
- * Structure: Sidebar | Main Content Area
+ * FinanSage Dark Theme - Version 4.2 (High Contrast)
+ * A professional, minimalist theme focused on pure black, pure white, and clear separation.
  */
 
 /* --- Core Palette & Typography --- */
 .root {
-    -fx-base: #1e1f22; /* The darkest background color for the main window */
-    -fx-background: #2b2d31; /* Background for content panes like the table area */
-    -fx-control-inner-background: #2b2d31;
-    -fx-accent: #7289da; /* A strong, friendly purple-blue accent */
+    -fx-base: #000000; /* Pure black for the main window */
+    -fx-background: #000000; /* Pure black for all content areas */
+    -fx-control-inner-background: #000000;
+    -fx-accent: #7289da; /* Retaining the vibrant purple-blue accent */
     -fx-default-button: -fx-accent;
     -fx-focus-color: -fx-accent;
     -fx-font-family: "Inter", "Segoe UI", sans-serif;
-    -fx-text-base-color: #dcddde; /* Primary, high-contrast text */
-    -fx-text-muted-color: #96989d; /* Secondary, softer text */
+    -fx-text-base-color: #FFFFFF; /* Pure white text for maximum contrast */
+    -fx-text-muted-color: #a0a0a0; /* A softer gray for secondary text */
 }
 
 /* --- Main Layout --- */
 .sidebar {
-    -fx-background-color: #202225;
+    -fx-background-color: #000000;
     -fx-padding: 20 10;
+    -fx-border-color: #333333; /* Gray border to separate from content */
+    -fx-border-width: 0 1px 0 0; /* Right border only */
 }
 
 /* --- Sidebar Buttons --- */
@@ -31,46 +32,54 @@
     -fx-font-weight: 500;
     -fx-pref-width: 150;
     -fx-padding: 10 15;
-    -fx-background-radius: 6;
+    -fx-background-radius: 8; /* More pronounced rounded corners */
     -fx-alignment: center-left;
+    -fx-border-color: transparent;
+    -fx-border-width: 1;
 }
 
 .sidebar-button:hover {
-    -fx-background-color: #36393f;
+    -fx-background-color: #1a1a1a; /* Subtle hover effect */
     -fx-text-fill: -fx-text-base-color;
 }
 
 .sidebar-button-selected {
-    -fx-background-color: #3a3d42;
+    -fx-background-color: #2a2a2a;
     -fx-text-fill: white;
     -fx-font-weight: bold;
 }
 
 /* --- Toolbar Buttons --- */
 .button {
-    -fx-background-color: #40444b;
-    -fx-text-fill: white;
+    -fx-background-color: transparent;
+    -fx-text-fill: -fx-text-muted-color;
     -fx-font-weight: bold;
-    -fx-background-radius: 5;
+    -fx-background-radius: 8; /* Pronounced rounded corners */
     -fx-padding: 8 16;
+    -fx-border-color: #555555; /* Gray border to make buttons stand out */
+    -fx-border-width: 1.5px;
 }
 
 .button:hover {
-    -fx-background-color: #4f545c;
+    -fx-background-color: #1a1a1a;
+    -fx-text-fill: -fx-text-base-color;
+    -fx-border-color: #999999; /* Brighter border on hover for clear feedback */
 }
 
 #summary-button {
     -fx-background-color: -fx-accent;
+    -fx-text-fill: white;
+    -fx-border-color: transparent; /* Primary button has no border */
 }
 #summary-button:hover {
     -fx-background-color: derive(-fx-accent, -10%);
 }
 
 
-/* --- TableView Styling (Critical for the Professional Look) --- */
+/* --- TableView Styling --- */
 .table-view {
-    -fx-background-color: -fx-background;
-    -fx-border-color: #36393f;
+    -fx-background-color: #000000;
+    -fx-border-color: #333333; /* Clear border */
     -fx-border-width: 1;
     -fx-background-radius: 8;
     -fx-border-radius: 8;
@@ -93,10 +102,10 @@
 }
 
 .table-view .table-row-cell {
-    -fx-background-color: -fx-background;
+    -fx-background-color: #000000;
     -fx-text-fill: -fx-text-base-color;
-    -fx-border-color: #36393f;
-    -fx-border-width: 1 0 0 0; /* Top border only, creates clean horizontal lines */
+    -fx-border-color: #333333;
+    -fx-border-width: 1 0 0 0; /* Top border only */
     -fx-padding: 14 12;
     -fx-font-size: 14px;
 }
@@ -106,9 +115,8 @@
     -fx-border-width: 0;
 }
 
-/* Remove alternating row colors for a cleaner, more modern look */
 .table-view .table-row-cell:odd {
-    -fx-background-color: -fx-background;
+    -fx-background-color: #000000;
 }
 
 .table-view .table-row-cell:selected {
@@ -120,12 +128,13 @@
 
 /* --- Dialog & Input Styles --- */
 .dialog-pane {
-    -fx-background-color: #2b2d31;
-    -fx-border-color: #202225;
+    -fx-background-color: #000000;
+    -fx-border-color: #333333;
+    -fx-border-width: 1.5;
 }
 
 .dialog-pane .header-panel {
-    -fx-background-color: #202225;
+    -fx-background-color: #1a1a1a;
 }
 
 .dialog-pane .header-panel .label {
@@ -133,11 +142,11 @@
 }
 
 .text-field, .combo-box, .date-picker {
-    -fx-background-color: #202225;
+    -fx-background-color: #000000;
     -fx-text-fill: -fx-text-base-color;
-    -fx-border-color: #36393f;
-    -fx-background-radius: 5;
-    -fx-border-radius: 5;
+    -fx-border-color: #555555;
+    -fx-background-radius: 8; /* Rounded corners for inputs */
+    -fx-border-radius: 8;
     -fx-prompt-text-fill: -fx-text-muted-color;
 }
 
