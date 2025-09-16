@@ -5,11 +5,12 @@ import com.finansage.model.TransactionType;
 
 import java.io.BufferedReader;
 import java.io.BufferedWriter;
-import java.io.File;
-import java.io.FileReader;
-import java.io.FileWriter;
 import java.io.IOException;
 import java.math.BigDecimal;
+import java.nio.file.Files;
+import java.nio.file.Path;
+import java.nio.file.Paths;
+import java.nio.file.StandardOpenOption;
 import java.time.LocalDate;
 import java.util.ArrayList;
 import java.util.List;
@@ -17,37 +18,30 @@ import java.util.UUID;
 
 public class TransactionRepository {
 
-    private final String csvFilePath;
+    private final Path filePath;
 
-    public TransactionRepository(String csvFilePath) {
-        this.csvFilePath = csvFilePath;
+    public TransactionRepository(String fileName) {
+        this.filePath = Paths.get(fileName);
     }
 
     public List<Transaction> loadTransactions() {
         List<Transaction> transactions = new ArrayList<>();
-        File file = new File(csvFilePath);
-
-        if (!file.exists()) {
+        if (!Files.exists(filePath)) {
             return transactions;
         }
 
-        try (BufferedReader br = new BufferedReader(new FileReader(file))) {
+        try (BufferedReader reader = Files.newBufferedReader(filePath)) {
             String line;
-            br.readLine();
-            while ((line = br.readLine()) != null) {
-                String[] values = line.split(",");
-                if (values.length == 6) {
-                    try {
-                        String id = values[0];
-                        LocalDate date = LocalDate.parse(values[1]);
-                        String description = values[2];
-                        BigDecimal amount = new BigDecimal(values[3]);
-                        TransactionType type = TransactionType.valueOf(values[4]);
-                        String category = values[5];
-                        transactions.add(new Transaction(id, date, description, amount, type, category));
-                    } catch (Exception e) {
-                        System.err.println("Skipping malformed line in CSV: " + line);
-                    }
+            while ((line = reader.readLine()) != null) {
+                String[] parts = line.split(",");
+                if (parts.length == 6) {
+                    String id = parts[0];
+                    LocalDate date = LocalDate.parse(parts[1]);
+                    String description = parts[2];
+                    BigDecimal amount = new BigDecimal(parts[3]);
+                    TransactionType type = TransactionType.valueOf(parts[4]);
+                    String category = parts[5];
+                    transactions.add(new Transaction(id, date, description, amount, type, category));
                 }
             }
         } catch (IOException e) {
@@ -57,20 +51,19 @@ public class TransactionRepository {
     }
 
     public void saveTransactions(List<Transaction> transactions) {
-        try (BufferedWriter bw = new BufferedWriter(new FileWriter(csvFilePath))) {
-            bw.write("id,date,description,amount,type,category");
-            bw.newLine();
-            for (Transaction transaction : transactions) {
+        try (BufferedWriter writer = Files.newBufferedWriter(filePath, StandardOpenOption.CREATE, StandardOpenOption.TRUNCATE_EXISTING)) {
+            for (Transaction t : transactions) {
+                if (t.getId() == null) {}
                 String line = String.join(",",
-                        transaction.getId(),
-                        transaction.getDate().toString(),
-                        transaction.getDescription(),
-                        transaction.getAmount().toPlainString(),
-                        transaction.getType().name(),
-                        transaction.getCategory()
+                        t.getId(),
+                        t.getDate().toString(),
+                        t.getDescription(),
+                        t.getAmount().toPlainString(),
+                        t.getType().name(),
+                        t.getCategory()
                 );
-                bw.write(line);
-                bw.newLine();
+                writer.write(line);
+                writer.newLine();
             }
         } catch (IOException e) {
             System.err.println("Error saving transactions to file: " + e.getMessage());

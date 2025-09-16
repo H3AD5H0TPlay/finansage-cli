@@ -6,7 +6,7 @@ import com.finansage.service.TransactionService;
 
 public class Main {
     public static void main(String[] args) {
-        System.out.println("Booting FinanSage...");
+        System.out.println("Welcome to FinanSage - Your Personal Finance Manager!");
 
         // Define the path for our data file.
         final String DATA_FILE = "transactions.csv";
@@ -17,11 +17,11 @@ public class Main {
         // 2. Initialize the Service Layer (the "brain"), injecting the repository.
         TransactionService transactionService = new TransactionService(transactionRepository);
 
-        // 3. Initialize the UI Layer (the "face")
+        // 3. Initialize the UI Layer (the "face"), injecting the service.
         CommandLineInterface cli = new CommandLineInterface(transactionService);
 
         // 4. Start the application
-        cli.run();
+        cli.start();
     }
 }
 

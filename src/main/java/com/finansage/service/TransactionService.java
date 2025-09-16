@@ -7,31 +7,35 @@ import com.finansage.repository.TransactionRepository;
 import java.math.BigDecimal;
 import java.time.LocalDate;
 import java.util.List;
-import java.util.UUID;
+import java.util.Objects;
+import java.util.concurrent.CopyOnWriteArrayList;
 
-/**
- * The business logic layer for handling transactions.
- * It coordinates operations between the UI and the data repository.
- */
 public class TransactionService {
 
     private final TransactionRepository repository;
-    private List<Transaction> transactions;
+    private final List<Transaction> transactions;
 
     public TransactionService(TransactionRepository repository) {
-        this.repository = repository;
-        this.transactions = repository.loadTransactions();
+        this.repository = Objects.requireNonNull(repository, "Repository cannot be null.");
+        this.transactions = new CopyOnWriteArrayList<>(this.repository.loadTransactions());
+    }
+
+    public List<Transaction> getAllTransactions() {
+        return List.copyOf(this.transactions);
     }
 
     public void addTransaction(LocalDate date, String description, BigDecimal amount, TransactionType type, String category) {
-        String id = UUID.randomUUID().toString(); // Generate a unique ID
-        Transaction newTransaction = new Transaction(id, date, description, amount, type, category);
+        Transaction newTransaction = new Transaction(null, date, description, amount, type, category);
         this.transactions.add(newTransaction);
         this.repository.saveTransactions(this.transactions);
     }
 
-    public List<Transaction> getAllTransactions() {
-        return List.copyOf(transactions);
+    public boolean deleteTransaction(String id) {
+        boolean removed = this.transactions.removeIf(transaction -> transaction.getId().equals(id));
+        if (removed) {
+            this.repository.saveTransactions(this.transactions);
+        }
+        return removed;
     }
 }
 
