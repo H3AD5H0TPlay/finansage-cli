@@ -7,7 +7,6 @@ import com.finansage.service.TransactionService;
 import java.math.BigDecimal;
 import java.time.LocalDate;
 import java.time.format.DateTimeParseException;
-import java.util.InputMismatchException;
 import java.util.List;
 import java.util.Scanner;
 
@@ -22,20 +21,16 @@ public class CommandLineInterface {
     }
 
     public void run() {
-        seedData();
-
         boolean running = true;
         while (running) {
             printMenu();
-            System.out.print("Enter your choice: ");
             int choice = getUserChoice();
-
             switch (choice) {
                 case 1:
-                    addTransactionUI();
+                    addTransaction();
                     break;
                 case 2:
-                    listTransactionsUI();
+                    listTransactions();
                     break;
                 case 0:
                     running = false;
@@ -52,22 +47,18 @@ public class CommandLineInterface {
         System.out.println("1. Add a new transaction");
         System.out.println("2. List all transactions");
         System.out.println("0. Exit");
-        System.out.println("----------------------");
+        System.out.print("Enter your choice: ");
     }
 
     private int getUserChoice() {
         try {
-            return scanner.nextInt();
-        } catch (InputMismatchException e) {
-            scanner.next();
+            return Integer.parseInt(scanner.nextLine());
+        } catch (NumberFormatException e) {
             return -1;
-        } finally {
-            scanner.nextLine();
         }
     }
 
-    private void addTransactionUI() {
-        System.out.println("\n--- Add New Transaction ---");
+    private void addTransaction() {
         try {
             System.out.print("Enter date (YYYY-MM-DD): ");
             LocalDate date = LocalDate.parse(scanner.nextLine());
@@ -78,38 +69,40 @@ public class CommandLineInterface {
             System.out.print("Enter amount: ");
             BigDecimal amount = new BigDecimal(scanner.nextLine());
 
-            System.out.print("Enter type (1 for INCOME, 2 for EXPENSE): ");
-            int typeChoice = Integer.parseInt(scanner.nextLine());
-            TransactionType type = (typeChoice == 1) ? TransactionType.INCOME : TransactionType.EXPENSE;
+            System.out.print("Enter type (INCOME/EXPENSE): ");
+            TransactionType type = TransactionType.valueOf(scanner.nextLine().toUpperCase());
 
             System.out.print("Enter category: ");
             String category = scanner.nextLine();
 
             transactionService.addTransaction(date, description, amount, type, category);
+            System.out.println("Transaction added successfully!");
 
         } catch (DateTimeParseException e) {
             System.out.println("Error: Invalid date format. Please use YYYY-MM-DD.");
-        } catch (NumberFormatException e) {
-            System.out.println("Error: Invalid number format for amount or type.");
-        } catch (Exception e) {
-            System.out.println("An unexpected error occurred: " + e.getMessage());
+        } catch (IllegalArgumentException e) {
+            System.out.println("Error: Invalid input. Please check your values (e.g., amount, type).");
         }
     }
 
-    private void listTransactionsUI() {
-        System.out.println("\n--- All Transactions ---");
+    private void listTransactions() {
         List<Transaction> transactions = transactionService.getAllTransactions();
-
         if (transactions.isEmpty()) {
-            System.out.println("No transactions to display.");
-        } else {
-            transactions.forEach(System.out::println);
+            System.out.println("No transactions found.");
+            return;
         }
-    }
 
-    private void seedData() {
-        // We can add some initial data to make testing easier.
-        transactionService.addTransaction(LocalDate.now().minusDays(5), "Initial Balance", new BigDecimal("1000.00"), TransactionType.INCOME, "Initial");
-        transactionService.addTransaction(LocalDate.now().minusDays(2), "Groceries", new BigDecimal("75.50"), TransactionType.EXPENSE, "Food");
+        System.out.println("\n--- All Transactions ---");
+        System.out.printf("%-12s | %-25s | %-10s | %-10s | %-15s\n", "Date", "Description", "Amount", "Type", "Category");
+        System.out.println("-".repeat(80));
+        for (Transaction t : transactions) {
+            System.out.printf("%-12s | %-25s | %-10.2f | %-10s | %-15s\n",
+                    t.getDate(),
+                    t.getDescription(),
+                    t.getAmount(),
+                    t.getType(),
+                    t.getCategory());
+        }
     }
 }
+
