@@ -4,8 +4,7 @@ import java.math.BigDecimal;
 import java.time.LocalDate;
 import java.util.UUID;
 
-public final class Transaction {
-
+public class Transaction {
     private final String id;
     private final LocalDate date;
     private final String description;
@@ -13,12 +12,25 @@ public final class Transaction {
     private final TransactionType type;
     private final String category;
 
+    /**
+     * Constructor for creating a NEW transaction.
+     * It automatically generates a unique ID.
+     */
+    public Transaction(LocalDate date, String description, BigDecimal amount, TransactionType type, String category) {
+        this.id = UUID.randomUUID().toString(); // Auto-generate the ID
+        this.date = date;
+        this.description = description;
+        this.amount = amount;
+        this.type = type;
+        this.category = category;
+    }
+
+    /**
+     * Constructor for LOADING an existing transaction from a data source.
+     * It uses the provided ID.
+     */
     public Transaction(String id, LocalDate date, String description, BigDecimal amount, TransactionType type, String category) {
-        if (id == null || id.isBlank()) {
-            this.id = UUID.randomUUID().toString();
-        } else {
-            this.id = id;
-        }
+        this.id = id;
         this.date = date;
         this.description = description;
         this.amount = amount;
@@ -50,18 +62,6 @@ public final class Transaction {
 
     public String getCategory() {
         return category;
-    }
-
-    @Override
-    public String toString() {
-        return "Transaction{" +
-                "id='" + id + '\'' +
-                ", date=" + date +
-                ", description='" + description + '\'' +
-                ", amount=" + amount +
-                ", type=" + type +
-                ", category='" + category + '\'' +
-                '}';
     }
 }
 

@@ -1,5 +1,6 @@
 package com.finansage.cli;
 
+import com.finansage.model.FinancialSummary;
 import com.finansage.model.Transaction;
 import com.finansage.model.TransactionType;
 import com.finansage.service.TransactionService;
@@ -37,6 +38,9 @@ public class CommandLineInterface {
                 case 3:
                     deleteTransaction();
                     break;
+                case 4: // New option
+                    showSummary();
+                    break;
                 case 0:
                     running = false;
                     break;
@@ -52,6 +56,7 @@ public class CommandLineInterface {
         System.out.println("1. Add Transaction");
         System.out.println("2. List all Transactions");
         System.out.println("3. Delete Transaction");
+        System.out.println("4. Show Financial Summary"); // New option
         System.out.println("0. Exit");
         System.out.println("----------------------");
     }
@@ -103,18 +108,28 @@ public class CommandLineInterface {
         }
     }
 
-    // --- New Validation Helper Methods ---
+    private void showSummary() {
+        System.out.println("\n--- Financial Summary ---");
+        FinancialSummary summary = transactionService.getFinancialSummary();
+        System.out.printf("Total Income:  %.2f%n", summary.totalIncome());
+        System.out.printf("Total Expenses: %.2f%n", summary.totalExpenses());
+        System.out.println("-------------------------");
+        System.out.printf("Net Balance:   %.2f%n", summary.netBalance());
+        System.out.println("-------------------------");
+    }
+
+    // --- Validation Helper Methods ---
 
     private int readInt(String prompt) {
         while (true) {
             System.out.print(prompt);
             try {
                 int value = scanner.nextInt();
-                scanner.nextLine();
+                scanner.nextLine(); // Consume the rest of the line
                 return value;
             } catch (InputMismatchException e) {
                 System.out.println("Invalid input. Please enter a whole number.");
-                scanner.nextLine();
+                scanner.nextLine(); // Clear the invalid input
             }
         }
     }
@@ -126,7 +141,7 @@ public class CommandLineInterface {
                 BigDecimal value = new BigDecimal(scanner.nextLine());
                 if (value.compareTo(BigDecimal.ZERO) < 0) {
                     System.out.println("Invalid input. Amount cannot be negative.");
-                    continue;
+                    continue; // Ask again
                 }
                 return value;
             } catch (NumberFormatException e) {
