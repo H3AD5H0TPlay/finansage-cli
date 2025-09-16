@@ -1,0 +1,6 @@
+id,date,description,amount,type,category
+13e2ed43-d675-4549-99fe-a7eb7de6554c,2025-09-11,Initial Balance,1000.00,INCOME,Initial
+87a8e283-1b8c-48ce-b315-b3b2cc04a7d3,2025-09-14,Groceries,75.50,EXPENSE,Food
+1c980c54-2e36-4a31-83cb-60a76192799d,2025-01-01,test,2500,INCOME,paycheck
+44442bfd-bec7-4999-bb1a-044dd5f4d573,2025-09-11,Initial Balance,1000.00,INCOME,Initial
+be068798-a303-468c-93f9-19329530a4c4,2025-09-14,Groceries,75.50,EXPENSE,Food

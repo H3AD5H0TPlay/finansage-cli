@@ -5,6 +5,7 @@ import java.time.LocalDate;
 import java.util.UUID;
 
 public final class Transaction {
+
     private final String id;
     private final LocalDate date;
     private final String description;
@@ -12,14 +13,20 @@ public final class Transaction {
     private final TransactionType type;
     private final String category;
 
-    public Transaction(LocalDate date, String description, BigDecimal amount, TransactionType type, String category) {
-        this.id = UUID.randomUUID().toString();
+    public Transaction(String id, LocalDate date, String description, BigDecimal amount, TransactionType type, String category) {
+        if (id == null || id.isBlank()) {
+            this.id = UUID.randomUUID().toString();
+        } else {
+            this.id = id;
+        }
         this.date = date;
         this.description = description;
         this.amount = amount;
         this.type = type;
         this.category = category;
     }
+
+    // --- Getters ---
 
     public String getId() {
         return id;
@@ -57,3 +64,4 @@ public final class Transaction {
                 '}';
     }
 }
+
