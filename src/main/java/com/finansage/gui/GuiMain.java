@@ -23,13 +23,11 @@ public class GuiMain extends Application {
         // 2. Initialize the Controller, injecting the service (Model)
         MainViewController mainViewController = new MainViewController(transactionService);
 
-        // 3. Create the main layout (View)
-        BorderPane root = new BorderPane();
-        // Get the visual component from the controller and place it in the center of our layout
-        root.setCenter(mainViewController.getView());
+        // 3. Get the main view from the controller
+        BorderPane root = mainViewController.getView();
 
         // 4. Create the Scene and show the Stage
-        Scene scene = new Scene(root, 800, 600); // Increased window size
+        Scene scene = new Scene(root, 800, 600);
 
         primaryStage.setTitle("FinanSage - Personal Finance Manager");
         primaryStage.setScene(scene);
@@ -40,4 +38,3 @@ public class GuiMain extends Application {
         launch(args);
     }
 }
-

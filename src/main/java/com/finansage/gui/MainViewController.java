@@ -6,16 +6,19 @@ import com.finansage.service.TransactionService;
 import javafx.collections.FXCollections;
 import javafx.collections.ObservableList;
 import javafx.geometry.Insets;
+import javafx.scene.control.Button;
 import javafx.scene.control.TableColumn;
 import javafx.scene.control.TableView;
+import javafx.scene.control.ToolBar;
 import javafx.scene.control.cell.PropertyValueFactory;
+import javafx.scene.layout.BorderPane;
 import javafx.scene.layout.VBox;
 
 import java.math.BigDecimal;
 import java.time.LocalDate;
 
 /**
- * Controller for the main application view. Manages the display of transactions.
+ * Controller for the main application view. Manages the display and interaction of transactions.
  */
 public class MainViewController {
 
@@ -23,71 +26,79 @@ public class MainViewController {
     private final TableView<Transaction> transactionTable;
     private final ObservableList<Transaction> transactionData;
 
+    // The main view pane managed by this controller
+    private final BorderPane view;
+
     public MainViewController(TransactionService transactionService) {
         this.transactionService = transactionService;
         this.transactionData = FXCollections.observableArrayList();
         this.transactionTable = createTransactionTable();
+        this.view = createMainView(); // Create the main view
         loadTransactionData();
     }
 
-    /**
-     * Creates and configures the main TableView for displaying transactions.
-     * @return A fully configured TableView.
-     */
+    private BorderPane createMainView() {
+        BorderPane mainPane = new BorderPane();
+        mainPane.setPadding(new Insets(10));
+
+        // Create the action buttons
+        Button addButton = new Button("Add");
+        Button editButton = new Button("Edit");
+        Button deleteButton = new Button("Delete");
+
+        // Add placeholder actions for now
+        addButton.setOnAction(event -> System.out.println("Add button clicked!"));
+        editButton.setOnAction(event -> System.out.println("Edit button clicked!"));
+        deleteButton.setOnAction(event -> System.out.println("Delete button clicked!"));
+
+        ToolBar toolBar = new ToolBar(addButton, editButton, deleteButton);
+        toolBar.setPadding(new Insets(0, 0, 10, 0)); // Add some spacing below the toolbar
+
+        mainPane.setTop(toolBar);
+        mainPane.setCenter(transactionTable);
+
+        return mainPane;
+    }
+
     private TableView<Transaction> createTransactionTable() {
         TableView<Transaction> table = new TableView<>();
+        table.setColumnResizePolicy(TableView.CONSTRAINED_RESIZE_POLICY_FLEX_LAST_COLUMN);
 
-        // 1. Create columns
         TableColumn<Transaction, LocalDate> dateCol = new TableColumn<>("Date");
         TableColumn<Transaction, String> descriptionCol = new TableColumn<>("Description");
         TableColumn<Transaction, BigDecimal> amountCol = new TableColumn<>("Amount");
         TableColumn<Transaction, TransactionType> typeCol = new TableColumn<>("Type");
         TableColumn<Transaction, String> categoryCol = new TableColumn<>("Category");
-        TableColumn<Transaction, String> idCol = new TableColumn<>("ID");
 
-        // 2. Specify how to populate the columns from the Transaction model.
-        // The string ("id", "date", etc.) MUST match the property name in the Transaction record.
         dateCol.setCellValueFactory(new PropertyValueFactory<>("date"));
         descriptionCol.setCellValueFactory(new PropertyValueFactory<>("description"));
         amountCol.setCellValueFactory(new PropertyValueFactory<>("amount"));
         typeCol.setCellValueFactory(new PropertyValueFactory<>("type"));
         categoryCol.setCellValueFactory(new PropertyValueFactory<>("category"));
-        idCol.setCellValueFactory(new PropertyValueFactory<>("id"));
 
-        // 3. Add columns to the table
-        table.getColumns().addAll(dateCol, descriptionCol, amountCol, typeCol, categoryCol, idCol);
-
-        // 4. Set the data source for the table
+        table.getColumns().addAll(dateCol, descriptionCol, amountCol, typeCol, categoryCol);
         table.setItems(transactionData);
 
-        // Professional Touch: Set column widths to be a percentage of the table width
-        dateCol.prefWidthProperty().bind(table.widthProperty().multiply(0.15));
-        descriptionCol.prefWidthProperty().bind(table.widthProperty().multiply(0.35));
-        amountCol.prefWidthProperty().bind(table.widthProperty().multiply(0.15));
-        typeCol.prefWidthProperty().bind(table.widthProperty().multiply(0.10));
-        categoryCol.prefWidthProperty().bind(table.widthProperty().multiply(0.25));
-
+        // Professional Touch: Set relative column widths
+        dateCol.setMaxWidth(1f * Integer.MAX_VALUE * 15); // 15%
+        descriptionCol.setMaxWidth(1f * Integer.MAX_VALUE * 40); // 40%
+        amountCol.setMaxWidth(1f * Integer.MAX_VALUE * 15); // 15%
+        typeCol.setMaxWidth(1f * Integer.MAX_VALUE * 10); // 10%
+        categoryCol.setMaxWidth(1f * Integer.MAX_VALUE * 20); // 20%
 
         return table;
     }
 
-    /**
-     * Loads transactions from the service and populates the observable list,
-     * which automatically updates the TableView.
-     */
     public void loadTransactionData() {
         transactionData.clear();
         transactionData.addAll(transactionService.getAllTransactions());
     }
 
     /**
-     * Exposes the main view component (the table wrapped in a layout pane)
-     * so it can be added to the main scene.
-     * @return A VBox containing the transaction table.
+     * Exposes the main view component so it can be added to the main scene.
+     * @return A BorderPane containing all the main view elements.
      */
-    public VBox getView() {
-        VBox vbox = new VBox(transactionTable);
-        vbox.setPadding(new Insets(10));
-        return vbox;
+    public BorderPane getView() {
+        return view;
     }
 }
